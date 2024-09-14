@@ -9,13 +9,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -26,6 +31,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,32 +47,81 @@ import androidx.compose.ui.unit.dp
 import br.edu.utfpr.appcontatos.R
 import br.edu.utfpr.appcontatos.data.Contact
 import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 @Composable
-fun ContactsListScreen(modifier: Modifier = Modifier) {
-    var isLoading = true
-    var hasError = false
-    var contacts = listOf<Contact>()
+fun ContactsListScreen(
+    modifier: Modifier = Modifier,
+    coroutineScope: CoroutineScope = rememberCoroutineScope()
+) {
+    val isInitialComposition: MutableState<Boolean> = rememberSaveable { mutableStateOf(true) }
+    val isLoading: MutableState<Boolean> = rememberSaveable { mutableStateOf(false) }
+    val hasError: MutableState<Boolean> = rememberSaveable { mutableStateOf(false) }
+    val contacts: MutableState<List<Contact>> = remember { mutableStateOf(listOf()) }
+
+    val loadContacts: () -> Unit = {
+        isLoading.value = true
+        hasError.value = false
+
+        coroutineScope.launch {
+            delay(2000)
+            hasError.value = Random.nextBoolean()
+            if (!hasError.value) {
+                val isEmpty = Random.nextBoolean()
+                if (isEmpty) {
+                    contacts.value = listOf()
+                } else {
+                    contacts.value = generateContacts()
+                }
+            }
+            isLoading.value = false
+        }
+    }
+
+    if (isInitialComposition.value) {
+        loadContacts()
+        isInitialComposition.value = false
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { AppBar() }
+        topBar = {
+            AppBar(
+                onRefreshPressed = loadContacts
+            )
+         },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(onClick = {
+                contacts.value = contacts.value.plus(
+                    Contact(firstName = "Teste", lastName = "Teste")
+                )
+            }) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "Adicionar"
+                )
+                Spacer(Modifier.size(8.dp))
+                Text("Novo contato")
+            }
+        }
     ) { paddingValues ->
         val defaultModifier = Modifier.padding(paddingValues)
-        if (isLoading) {
+        if (isLoading.value) {
             LoadingContent(modifier = defaultModifier)
-        } else if (hasError) {
+        } else if (hasError.value) {
             ErrorContent(
                 modifier = defaultModifier,
-                onTryAgainPressed = {}
+                onTryAgainPressed = loadContacts
             )
-        } else if (contacts.isEmpty()) {
+        } else if (contacts.value.isEmpty()) {
             EmptyList(modifier = defaultModifier)
         } else {
             List(
                 modifier = defaultModifier,
-                contacts = contacts
+                contacts = contacts.value
             )
         }
     }
@@ -70,15 +129,27 @@ fun ContactsListScreen(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AppBar(modifier: Modifier = Modifier) {
+private fun AppBar(
+    modifier: Modifier = Modifier,
+    onRefreshPressed: () -> Unit
+) {
     TopAppBar(
         modifier = modifier.fillMaxWidth(),
         title = {
             Text(stringResource(R.string.contacts))
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            titleContentColor = MaterialTheme.colorScheme.primary
-        )
+            titleContentColor = MaterialTheme.colorScheme.primary,
+            actionIconContentColor = MaterialTheme.colorScheme.primary
+        ),
+        actions = {
+            IconButton(onClick = onRefreshPressed) {
+                Icon(
+                    imageVector = Icons.Filled.Refresh,
+                    contentDescription = stringResource(R.string.refresh)
+                )
+            }
+        }
     )
 }
 
@@ -86,7 +157,7 @@ private fun AppBar(modifier: Modifier = Modifier) {
 @Composable
 private fun AppBarPreview() {
     AppContatosTheme {
-        AppBar()
+        AppBar(onRefreshPressed = {})
     }
 }
 
@@ -214,36 +285,47 @@ private fun List(
     modifier: Modifier = Modifier,
     contacts: List<Contact>
 ) {
-    Column(
+    LazyColumn(
         modifier = modifier
     ) {
-        contacts.forEach { contact ->
-            var isFavorite = contact.isFavorite
-            ListItem(
-                headlineContent = { Text(contact.fullName) },
-                leadingContent = {},
-                trailingContent = {
-                    IconButton(onClick = {
-                        isFavorite = !isFavorite
-                    }) {
-                        Icon(
-                            imageVector = if (isFavorite) {
-                                Icons.Filled.Favorite
-                            } else {
-                                Icons.Filled.FavoriteBorder
-                            },
-                            contentDescription = "Favoritar",
-                            tint = if (isFavorite) {
-                                Color.Red
-                            } else {
-                                LocalContentColor.current
-                            }
-                        )
-                    }
-                }
-            )
+        items(contacts) { contact ->
+            ContactListItem(contact = contact)
         }
     }
+}
+
+@Composable
+private fun ContactListItem(
+    modifier: Modifier = Modifier,
+    contact: Contact
+) {
+    val isFavorite: MutableState<Boolean> = rememberSaveable {
+        mutableStateOf(contact.isFavorite)
+    }
+    ListItem(
+        modifier = modifier,
+        headlineContent = { Text(contact.fullName) },
+        leadingContent = {},
+        trailingContent = {
+            IconButton(onClick = {
+                isFavorite.value = !isFavorite.value
+            }) {
+                Icon(
+                    imageVector = if (isFavorite.value) {
+                        Icons.Filled.Favorite
+                    } else {
+                        Icons.Filled.FavoriteBorder
+                    },
+                    contentDescription = "Favoritar",
+                    tint = if (isFavorite.value) {
+                        Color.Red
+                    } else {
+                        LocalContentColor.current
+                    }
+                )
+            }
+        }
+    )
 }
 
 @Preview(showBackground = true)
