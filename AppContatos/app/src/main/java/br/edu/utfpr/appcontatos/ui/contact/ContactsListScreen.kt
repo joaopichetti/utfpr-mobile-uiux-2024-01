@@ -49,13 +49,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import br.edu.utfpr.appcontatos.R
 import br.edu.utfpr.appcontatos.data.Contact
+import br.edu.utfpr.appcontatos.data.ContactDatasource
+import br.edu.utfpr.appcontatos.data.generateContacts
 import br.edu.utfpr.appcontatos.data.groupByInitial
 import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
 import br.edu.utfpr.appcontatos.ui.utils.composables.ContactAvatar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.random.Random
 
 @Composable
 fun ContactsListScreen(
@@ -73,31 +74,15 @@ fun ContactsListScreen(
 
         coroutineScope.launch {
             delay(2000)
-            hasError.value = Random.nextBoolean()
-            if (!hasError.value) {
-                val isEmpty = Random.nextBoolean()
-                if (isEmpty) {
-                    contacts.value = mapOf()
-                } else {
-                    contacts.value = generateContacts().groupByInitial()
-                }
-            }
+            contacts.value = ContactDatasource.instance.findAll().groupByInitial()
             isLoading.value = false
         }
     }
 
     val toggleFavorite: (Contact) -> Unit = { contact ->
-        val newMap: MutableMap<String, List<Contact>> = mutableMapOf()
-        contacts.value.keys.forEach { key ->
-            newMap[key] = contacts.value[key]!!.map {
-                if (it.id == contact.id) {
-                    it.copy(isFavorite = !it.isFavorite)
-                } else {
-                    it
-                }
-            }
-        }
-        contacts.value = newMap.toMap()
+        val updatedContact = contact.copy(isFavorite = !contact.isFavorite)
+        ContactDatasource.instance.save(updatedContact)
+        contacts.value = ContactDatasource.instance.findAll().groupByInitial()
     }
 
     if (isInitialComposition.value) {
@@ -380,31 +365,6 @@ private fun ListPreview() {
             onFavoritePressed = {}
         )
     }
-}
-
-private fun generateContacts(): List<Contact> {
-    val firstNames = listOf("João", "José", "Everton", "Marcos", "André", "Anderson", "Antônio",
-        "Laura", "Ana", "Maria", "Joaquina", "Suelen")
-    val lastNames = listOf("Do Carmo", "Oliveira", "Dos Santos", "Da Silva", "Brasil", "Pichetti",
-        "Cordeiro", "Silveira", "Andrades", "Cardoso")
-    val contacts: MutableList<Contact> = mutableListOf()
-    for (i in 0..19) {
-        var generatedNewContact = false
-        while (!generatedNewContact) {
-            val firstNameIndex = Random.nextInt(firstNames.size)
-            val lastNameIndex = Random.nextInt(lastNames.size)
-            val newContact = Contact(
-                id = i+1,
-                firstName = firstNames[firstNameIndex],
-                lastName = lastNames[lastNameIndex]
-            )
-            if (!contacts.any { it.fullName == newContact.fullName }) {
-                contacts.add(newContact)
-                generatedNewContact = true
-            }
-        }
-    }
-    return contacts
 }
 
 
