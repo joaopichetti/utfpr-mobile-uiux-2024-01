@@ -8,4 +8,12 @@
     <string name="no_data">Nada por aqui...</string>
     <string name="no_data_hint">Você ainda não adicionou nenhum contato.\nAdicione o primeiro utilizando o botão \"Novo contato\"</string>
     <string name="refresh">Atualizar</string>
+    <string name="voltar">Voltar</string>
+    <string name="editar">Editar</string>
+    <string name="favoritar">Favoritar</string>
+    <string name="excluir">Excluir</string>
+    <string name="ligar">Ligar</string>
+    <string name="texto">Texto</string>
+    <string name="video">Vídeo</string>
+    <string name="email">E-mail</string>
 </resources>
