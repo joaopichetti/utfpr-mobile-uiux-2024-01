@@ -29,11 +29,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +62,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
+import kotlin.random.Random
 
 @Composable
 fun ContactDetailsScreen(
@@ -67,7 +71,8 @@ fun ContactDetailsScreen(
     coroutineScope: CoroutineScope = rememberCoroutineScope(),
     onBackPressed: () -> Unit,
     onEditPressed: () -> Unit,
-    onContactDeleted: () -> Unit
+    onContactDeleted: () -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     var isInitialComposition: Boolean by rememberSaveable {
         mutableStateOf(true)
@@ -103,6 +108,15 @@ fun ContactDetailsScreen(
         isInitialComposition = false
     }
 
+    LaunchedEffect(snackbarHostState, uiState.hasErrorDeleting) {
+        if (uiState.hasErrorDeleting) {
+            snackbarHostState.showSnackbar(
+                "Ocorreu um erro ao tentar excluir o contato." +
+                        " Aguarde um momento e tente novamente"
+            )
+        }
+    }
+
     if (uiState.showConfirmationDialog) {
         ConfirmationDialog(
             content = stringResource(R.string.confirmar_remover_contato),
@@ -110,9 +124,28 @@ fun ContactDetailsScreen(
                 uiState = uiState.copy(showConfirmationDialog = false)
             },
             onConfirm = {
-                uiState = uiState.copy(showConfirmationDialog = false)
-                ContactDatasource.instance.delete(uiState.contact)
-                onContactDeleted()
+                uiState = uiState.copy(
+                    showConfirmationDialog = false,
+                    isDeleting = true,
+                    hasErrorDeleting = false
+                )
+                coroutineScope.launch {
+                    delay(2000)
+                    val hasError = Random.nextBoolean()
+                    uiState = if (hasError) {
+                        uiState.copy(
+                            isDeleting = false,
+                            hasErrorDeleting = true
+                        )
+                    } else {
+                        ContactDatasource.instance.delete(uiState.contact)
+                        onContactDeleted()
+                        uiState.copy(
+                            isDeleting = false,
+                            hasErrorDeleting = false
+                        )
+                    }
+                }
             }
         )
     }
@@ -128,9 +161,10 @@ fun ContactDetailsScreen(
     } else {
         Scaffold(
             modifier = contentModifier,
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = {
                 AppBar(
-                    isDeleting = false,
+                    isDeleting = uiState.isDeleting,
                     contact = uiState.contact,
                     onBackPressed = onBackPressed,
                     onDeletePressed = {
