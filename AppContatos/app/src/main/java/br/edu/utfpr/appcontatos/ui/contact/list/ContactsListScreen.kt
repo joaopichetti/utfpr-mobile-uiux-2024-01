@@ -28,12 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -41,9 +35,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import br.edu.utfpr.appcontatos.R
 import br.edu.utfpr.appcontatos.data.Contact
-import br.edu.utfpr.appcontatos.data.ContactDatasource
 import br.edu.utfpr.appcontatos.data.generateContacts
 import br.edu.utfpr.appcontatos.data.groupByInitial
 import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
@@ -51,64 +45,31 @@ import br.edu.utfpr.appcontatos.ui.utils.composables.ContactAvatar
 import br.edu.utfpr.appcontatos.ui.utils.composables.DefaultErrorContent
 import br.edu.utfpr.appcontatos.ui.utils.composables.DefaultLoadingContent
 import br.edu.utfpr.appcontatos.ui.utils.composables.FavoriteIconButton
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun ContactsListScreen(
     modifier: Modifier = Modifier,
-    coroutineScope: CoroutineScope = rememberCoroutineScope(),
     onAddPressed: () -> Unit,
-    onContactPressed: (Contact) -> Unit
+    onContactPressed: (Contact) -> Unit,
+    viewModel: ContactsListViewModel = viewModel()
 ) {
-    var isInitialComposition: Boolean by rememberSaveable { mutableStateOf(true) }
-    var uiState: ContactsListUiState by remember { mutableStateOf(ContactsListUiState()) }
-
-    val loadContacts: () -> Unit = {
-        uiState = uiState.copy(
-            isLoading = true,
-            hasError = false
-        )
-        coroutineScope.launch {
-            delay(2000)
-            val contacts: List<Contact> = ContactDatasource.instance.findAll()
-            uiState = uiState.copy(
-                contacts = contacts.groupByInitial(),
-                isLoading = false
-            )
-        }
-    }
-
-    val toggleFavorite: (Contact) -> Unit = { contact ->
-        val updatedContact = contact.copy(isFavorite = !contact.isFavorite)
-        ContactDatasource.instance.save(updatedContact)
-        val contacts: List<Contact> = ContactDatasource.instance.findAll()
-        uiState = uiState.copy(contacts = contacts.groupByInitial())
-    }
-
-    if (isInitialComposition) {
-        loadContacts()
-        isInitialComposition = false
-    }
-
     val contentModifier = modifier.fillMaxSize()
-    if (uiState.isLoading) {
+    if (viewModel.uiState.isLoading) {
         DefaultLoadingContent(
             modifier = contentModifier,
             text = stringResource(R.string.loading_contacts)
         )
-    } else if (uiState.hasError) {
+    } else if (viewModel.uiState.hasError) {
         DefaultErrorContent(
             modifier = contentModifier,
-            onTryAgainPressed = loadContacts
+            onTryAgainPressed = viewModel::loadContacts
         )
     } else {
         Scaffold(
             modifier = modifier.fillMaxSize(),
             topBar = {
                 AppBar(
-                    onRefreshPressed = loadContacts
+                    onRefreshPressed = viewModel::loadContacts
                 )
             },
             floatingActionButton = {
@@ -123,13 +84,13 @@ fun ContactsListScreen(
             }
         ) { paddingValues ->
             val defaultModifier = Modifier.padding(paddingValues)
-            if (uiState.contacts.isEmpty()) {
+            if (viewModel.uiState.contacts.isEmpty()) {
                 EmptyList(modifier = defaultModifier)
             } else {
                 List(
                     modifier = defaultModifier,
-                    contacts = uiState.contacts,
-                    onFavoritePressed = toggleFavorite,
+                    contacts = viewModel.uiState.contacts,
+                    onFavoritePressed = viewModel::toggleFavorite,
                     onContactPressed = onContactPressed
                 )
             }
