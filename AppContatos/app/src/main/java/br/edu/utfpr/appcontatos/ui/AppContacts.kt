@@ -54,7 +54,14 @@ fun AppContacts(
         ) { navBackStackEntry ->
             val contactId: Int = navBackStackEntry.arguments?.getInt(Arguments.CONTACT_ID) ?: 0
             ContactDetailsScreen(
-                contactId = contactId
+                contactId = contactId,
+                onBackPressed = {
+                    navController.popBackStack()
+                },
+                onEditPressed = {},
+                onContactDeleted = {
+                    navController.popBackStack()
+                }
             )
         }
     }

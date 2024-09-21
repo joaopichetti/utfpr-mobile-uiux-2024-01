@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Sms
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -62,7 +64,10 @@ import java.time.format.DateTimeFormatter
 fun ContactDetailsScreen(
     modifier: Modifier = Modifier,
     contactId: Int,
-    coroutineScope: CoroutineScope = rememberCoroutineScope()
+    coroutineScope: CoroutineScope = rememberCoroutineScope(),
+    onBackPressed: () -> Unit,
+    onEditPressed: () -> Unit,
+    onContactDeleted: () -> Unit
 ) {
     var isInitialComposition: Boolean by rememberSaveable {
         mutableStateOf(true)
@@ -98,6 +103,20 @@ fun ContactDetailsScreen(
         isInitialComposition = false
     }
 
+    if (uiState.showConfirmationDialog) {
+        ConfirmationDialog(
+            content = stringResource(R.string.confirmar_remover_contato),
+            onDismiss = {
+                uiState = uiState.copy(showConfirmationDialog = false)
+            },
+            onConfirm = {
+                uiState = uiState.copy(showConfirmationDialog = false)
+                ContactDatasource.instance.delete(uiState.contact)
+                onContactDeleted()
+            }
+        )
+    }
+
     val contentModifier: Modifier = modifier.fillMaxSize()
     if (uiState.isLoading) {
         DefaultLoadingContent(modifier = contentModifier)
@@ -113,17 +132,27 @@ fun ContactDetailsScreen(
                 AppBar(
                     isDeleting = false,
                     contact = uiState.contact,
-                    onBackPressed = { /*TODO*/ },
-                    onDeletePressed = { /*TODO*/ },
-                    onEditPressed = { /*TODO*/ },
-                    onFavoritePressed = {}
+                    onBackPressed = onBackPressed,
+                    onDeletePressed = {
+                        uiState = uiState.copy(showConfirmationDialog = true)
+                    },
+                    onEditPressed = onEditPressed,
+                    onFavoritePressed = {
+                        val updatedContact = uiState.contact.copy(
+                            isFavorite = !uiState.contact.isFavorite
+                        )
+                        uiState = uiState.copy(
+                            contact = ContactDatasource.instance.save(updatedContact)
+                        )
+                    }
                 )
             }
         ) { paddingValues ->
             ContactDetails(
                 modifier = Modifier.padding(paddingValues),
                 contact = uiState.contact,
-                isDeleting = false
+                isDeleting = false,
+                onEditPressed = onEditPressed
             )
         }
     }
@@ -235,7 +264,8 @@ private fun AppBarIsFavoritePreview() {
 private fun ContactDetails(
     modifier: Modifier = Modifier,
     contact: Contact,
-    isDeleting: Boolean
+    isDeleting: Boolean,
+    onEditPressed: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -302,7 +332,7 @@ private fun ContactDetails(
                     "Adicionar número de telefone"
                 },
                 enabled = contact.phoneNumber.isBlank() && !isDeleting,
-                onPressed = {}
+                onPressed = onEditPressed
             )
             ContactInfo(
                 imageVector = Icons.Outlined.Email,
@@ -310,7 +340,7 @@ private fun ContactDetails(
                     "Adicionar e-mail"
                 },
                 enabled = contact.email.isBlank() && !isDeleting,
-                onPressed = {}
+                onPressed = onEditPressed
             )
             Spacer(Modifier.size(8.dp))
         }
@@ -334,7 +364,8 @@ private fun ContactDetailsPreview() {
                 firstName = "João",
                 lastName = "Guilherme"
             ),
-            isDeleting = false
+            isDeleting = false,
+            onEditPressed = {}
         )
     }
 }
@@ -394,6 +425,47 @@ private fun ContactInfo(
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall
+        )
+    }
+}
+
+@Composable
+private fun ConfirmationDialog(
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    content: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        modifier = modifier,
+        title = title?.let {
+            { Text(it) }
+        },
+        text = { Text(content) },
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.confirmar))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancelar))
+            }
+        }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ConfirmationDialogPreview() {
+    AppContatosTheme {
+        ConfirmationDialog(
+            title = "Atenção",
+            content = "Essa operação não poderá ser desfeita. Deseja continuar?",
+            onDismiss = {},
+            onConfirm = {}
         )
     }
 }
