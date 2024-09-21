@@ -3,6 +3,7 @@ package br.edu.utfpr.appcontatos.ui.contact.list
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,7 +58,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun ContactsListScreen(
     modifier: Modifier = Modifier,
-    coroutineScope: CoroutineScope = rememberCoroutineScope()
+    coroutineScope: CoroutineScope = rememberCoroutineScope(),
+    onAddPressed: () -> Unit,
+    onContactPressed: (Contact) -> Unit
 ) {
     var isInitialComposition: Boolean by rememberSaveable { mutableStateOf(true) }
     var uiState: ContactsListUiState by remember { mutableStateOf(ContactsListUiState()) }
@@ -109,7 +112,7 @@ fun ContactsListScreen(
                 )
             },
             floatingActionButton = {
-                ExtendedFloatingActionButton(onClick = {}) {
+                ExtendedFloatingActionButton(onClick = onAddPressed) {
                     Icon(
                         imageVector = Icons.Filled.Add,
                         contentDescription = "Adicionar"
@@ -126,7 +129,8 @@ fun ContactsListScreen(
                 List(
                     modifier = defaultModifier,
                     contacts = uiState.contacts,
-                    onFavoritePressed = toggleFavorite
+                    onFavoritePressed = toggleFavorite,
+                    onContactPressed = onContactPressed
                 )
             }
         }
@@ -209,7 +213,8 @@ private fun EmptyListPreview() {
 private fun List(
     modifier: Modifier = Modifier,
     contacts: Map<String, List<Contact>>,
-    onFavoritePressed: (Contact) -> Unit
+    onFavoritePressed: (Contact) -> Unit,
+    onContactPressed: (Contact) -> Unit
 ) {
     LazyColumn(
         modifier = modifier
@@ -234,7 +239,8 @@ private fun List(
             items(contacts) { contact ->
                 ContactListItem(
                     contact = contact,
-                    onFavoritePressed = onFavoritePressed
+                    onFavoritePressed = onFavoritePressed,
+                    onContactPressed = onContactPressed
                 )
             }
         }
@@ -245,10 +251,11 @@ private fun List(
 private fun ContactListItem(
     modifier: Modifier = Modifier,
     contact: Contact,
-    onFavoritePressed: (Contact) -> Unit
+    onFavoritePressed: (Contact) -> Unit,
+    onContactPressed: (Contact) -> Unit
 ) {
     ListItem(
-        modifier = modifier,
+        modifier = modifier.clickable { onContactPressed(contact) },
         headlineContent = { Text(contact.fullName) },
         leadingContent = {
             ContactAvatar(
@@ -271,7 +278,8 @@ private fun ListPreview() {
     AppContatosTheme {
         List(
             contacts = generateContacts().groupByInitial(),
-            onFavoritePressed = {}
+            onFavoritePressed = {},
+            onContactPressed = {}
         )
     }
 }
