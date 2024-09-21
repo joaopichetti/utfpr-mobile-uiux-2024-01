@@ -27,10 +27,17 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -40,21 +47,86 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import br.edu.utfpr.appcontatos.R
 import br.edu.utfpr.appcontatos.data.Contact
+import br.edu.utfpr.appcontatos.data.ContactDatasource
 import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
 import br.edu.utfpr.appcontatos.ui.utils.composables.ContactAvatar
+import br.edu.utfpr.appcontatos.ui.utils.composables.DefaultErrorContent
+import br.edu.utfpr.appcontatos.ui.utils.composables.DefaultLoadingContent
 import br.edu.utfpr.appcontatos.ui.utils.composables.FavoriteIconButton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun ContactDetailsScreen(modifier: Modifier = Modifier) {
-//    Scaffold(
-//        modifier = modifier.fillMaxSize(),
-//        topBar = {
-//
-//        }
-//    ) {
-//
-//    }
+fun ContactDetailsScreen(
+    modifier: Modifier = Modifier,
+    contactId: Int,
+    coroutineScope: CoroutineScope = rememberCoroutineScope()
+) {
+    var isInitialComposition: Boolean by rememberSaveable {
+        mutableStateOf(true)
+    }
+    var uiState: ContactDetailsUiState by remember {
+        mutableStateOf(ContactDetailsUiState())
+    }
+
+    val loadContact: () -> Unit = {
+        uiState = uiState.copy(
+            isLoading = true,
+            hasErrorLoading = false
+        )
+        coroutineScope.launch {
+            delay(2000)
+            val contact = ContactDatasource.instance.findById(contactId)
+            uiState = if (contact == null) {
+                uiState.copy(
+                    isLoading = false,
+                    hasErrorLoading = true
+                )
+            } else {
+                uiState.copy(
+                    isLoading = false,
+                    contact = contact
+                )
+            }
+        }
+    }
+
+    if (isInitialComposition) {
+        loadContact()
+        isInitialComposition = false
+    }
+
+    val contentModifier: Modifier = modifier.fillMaxSize()
+    if (uiState.isLoading) {
+        DefaultLoadingContent(modifier = contentModifier)
+    } else if (uiState.hasErrorLoading) {
+        DefaultErrorContent(
+            modifier = contentModifier,
+            onTryAgainPressed = {}
+        )
+    } else {
+        Scaffold(
+            modifier = contentModifier,
+            topBar = {
+                AppBar(
+                    isDeleting = false,
+                    contact = uiState.contact,
+                    onBackPressed = { /*TODO*/ },
+                    onDeletePressed = { /*TODO*/ },
+                    onEditPressed = { /*TODO*/ },
+                    onFavoritePressed = {}
+                )
+            }
+        ) { paddingValues ->
+            ContactDetails(
+                modifier = Modifier.padding(paddingValues),
+                contact = uiState.contact,
+                isDeleting = false
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
