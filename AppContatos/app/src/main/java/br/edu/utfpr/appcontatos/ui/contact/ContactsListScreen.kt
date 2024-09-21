@@ -86,43 +86,46 @@ fun ContactsListScreen(
         isInitialComposition.value = false
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            AppBar(
-                onRefreshPressed = loadContacts
-            )
-         },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(onClick = {
-                contacts.value = contacts.value.plus(
-                    Contact(firstName = "Teste", lastName = "Teste")
+    val contentModifier = modifier.fillMaxSize()
+    if (isLoading.value) {
+        LoadingContent(modifier = contentModifier)
+    } else if (hasError.value) {
+        ErrorContent(
+            modifier = contentModifier,
+            onTryAgainPressed = loadContacts
+        )
+    } else {
+        Scaffold(
+            modifier = modifier.fillMaxSize(),
+            topBar = {
+                AppBar(
+                    onRefreshPressed = loadContacts
                 )
-            }) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = "Adicionar"
-                )
-                Spacer(Modifier.size(8.dp))
-                Text("Novo contato")
+            },
+            floatingActionButton = {
+                ExtendedFloatingActionButton(onClick = {
+                    contacts.value = contacts.value.plus(
+                        Contact(firstName = "Teste", lastName = "Teste")
+                    )
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Adicionar"
+                    )
+                    Spacer(Modifier.size(8.dp))
+                    Text("Novo contato")
+                }
             }
-        }
-    ) { paddingValues ->
-        val defaultModifier = Modifier.padding(paddingValues)
-        if (isLoading.value) {
-            LoadingContent(modifier = defaultModifier)
-        } else if (hasError.value) {
-            ErrorContent(
-                modifier = defaultModifier,
-                onTryAgainPressed = loadContacts
-            )
-        } else if (contacts.value.isEmpty()) {
-            EmptyList(modifier = defaultModifier)
-        } else {
-            List(
-                modifier = defaultModifier,
-                contacts = contacts.value
-            )
+        ) { paddingValues ->
+            val defaultModifier = Modifier.padding(paddingValues)
+            if (contacts.value.isEmpty()) {
+                EmptyList(modifier = defaultModifier)
+            } else {
+                List(
+                    modifier = defaultModifier,
+                    contacts = contacts.value
+                )
+            }
         }
     }
 }
