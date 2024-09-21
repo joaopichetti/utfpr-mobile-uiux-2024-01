@@ -1,4 +1,4 @@
-package br.edu.utfpr.appcontatos.ui.contact
+package br.edu.utfpr.appcontatos.ui.contact.list
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -65,25 +65,28 @@ fun ContactsListScreen(
     coroutineScope: CoroutineScope = rememberCoroutineScope()
 ) {
     var isInitialComposition: Boolean by rememberSaveable { mutableStateOf(true) }
-    var isLoading: Boolean by rememberSaveable { mutableStateOf(false) }
-    var hasError: Boolean by rememberSaveable { mutableStateOf(false) }
-    var contacts: Map<String, List<Contact>> by remember { mutableStateOf(mapOf()) }
+    var uiState: ContactsListUiState by remember { mutableStateOf(ContactsListUiState()) }
 
     val loadContacts: () -> Unit = {
-        isLoading = true
-        hasError = false
-
+        uiState = uiState.copy(
+            isLoading = true,
+            hasError = false
+        )
         coroutineScope.launch {
             delay(2000)
-            contacts = ContactDatasource.instance.findAll().groupByInitial()
-            isLoading = false
+            val contacts: List<Contact> = ContactDatasource.instance.findAll()
+            uiState = uiState.copy(
+                contacts = contacts.groupByInitial(),
+                isLoading = false
+            )
         }
     }
 
     val toggleFavorite: (Contact) -> Unit = { contact ->
         val updatedContact = contact.copy(isFavorite = !contact.isFavorite)
         ContactDatasource.instance.save(updatedContact)
-        contacts = ContactDatasource.instance.findAll().groupByInitial()
+        val contacts: List<Contact> = ContactDatasource.instance.findAll()
+        uiState = uiState.copy(contacts = contacts.groupByInitial())
     }
 
     if (isInitialComposition) {
@@ -92,9 +95,9 @@ fun ContactsListScreen(
     }
 
     val contentModifier = modifier.fillMaxSize()
-    if (isLoading) {
+    if (uiState.isLoading) {
         LoadingContent(modifier = contentModifier)
-    } else if (hasError) {
+    } else if (uiState.hasError) {
         ErrorContent(
             modifier = contentModifier,
             onTryAgainPressed = loadContacts
@@ -119,12 +122,12 @@ fun ContactsListScreen(
             }
         ) { paddingValues ->
             val defaultModifier = Modifier.padding(paddingValues)
-            if (contacts.isEmpty()) {
+            if (uiState.contacts.isEmpty()) {
                 EmptyList(modifier = defaultModifier)
             } else {
                 List(
                     modifier = defaultModifier,
-                    contacts = contacts,
+                    contacts = uiState.contacts,
                     onFavoritePressed = toggleFavorite
                 )
             }
