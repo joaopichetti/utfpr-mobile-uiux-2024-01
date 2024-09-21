@@ -55,6 +55,7 @@ import br.edu.utfpr.appcontatos.data.generateContacts
 import br.edu.utfpr.appcontatos.data.groupByInitial
 import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
 import br.edu.utfpr.appcontatos.ui.utils.composables.ContactAvatar
+import br.edu.utfpr.appcontatos.ui.utils.composables.FavoriteIconButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -341,21 +342,10 @@ private fun ContactListItem(
             )
         },
         trailingContent = {
-            IconButton(onClick = { onFavoritePressed(contact) }) {
-                Icon(
-                    imageVector = if (contact.isFavorite) {
-                        Icons.Filled.Favorite
-                    } else {
-                        Icons.Filled.FavoriteBorder
-                    },
-                    contentDescription = "Favoritar",
-                    tint = if (contact.isFavorite) {
-                        Color.Red
-                    } else {
-                        LocalContentColor.current
-                    }
-                )
-            }
+            FavoriteIconButton(
+                isFavorite = contact.isFavorite,
+                onPressed = { onFavoritePressed(contact) }
+            )
         }
     )
 }
