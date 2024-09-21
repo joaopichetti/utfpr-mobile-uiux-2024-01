@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,18 +15,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -42,7 +35,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -55,6 +47,8 @@ import br.edu.utfpr.appcontatos.data.generateContacts
 import br.edu.utfpr.appcontatos.data.groupByInitial
 import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
 import br.edu.utfpr.appcontatos.ui.utils.composables.ContactAvatar
+import br.edu.utfpr.appcontatos.ui.utils.composables.DefaultErrorContent
+import br.edu.utfpr.appcontatos.ui.utils.composables.DefaultLoadingContent
 import br.edu.utfpr.appcontatos.ui.utils.composables.FavoriteIconButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -97,9 +91,12 @@ fun ContactsListScreen(
 
     val contentModifier = modifier.fillMaxSize()
     if (uiState.isLoading) {
-        LoadingContent(modifier = contentModifier)
+        DefaultLoadingContent(
+            modifier = contentModifier,
+            text = stringResource(R.string.loading_contacts)
+        )
     } else if (uiState.hasError) {
-        ErrorContent(
+        DefaultErrorContent(
             modifier = contentModifier,
             onTryAgainPressed = loadContacts
         )
@@ -167,88 +164,6 @@ private fun AppBar(
 private fun AppBarPreview() {
     AppContatosTheme {
         AppBar(onRefreshPressed = {})
-    }
-}
-
-@Composable
-private fun LoadingContent(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressIndicator(
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
-            modifier = Modifier.size(60.dp)
-        )
-        Spacer(Modifier.size(8.dp))
-        Text(
-            text = stringResource(R.string.loading_contacts),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary,
-        )
-    }
-}
-
-@Preview(showBackground = true, heightDp = 400)
-@Composable
-private fun LoadingContentPreview() {
-    AppContatosTheme {
-        LoadingContent()
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    modifier: Modifier = Modifier,
-    onTryAgainPressed: () -> Unit
- ) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        val defaultColor = MaterialTheme.colorScheme.primary
-        Icon(
-            imageVector = Icons.Filled.CloudOff,
-            contentDescription = stringResource(R.string.loading_error),
-            tint = defaultColor,
-            modifier = Modifier.size(80.dp)
-        )
-        val textPadding = PaddingValues(
-            top = 8.dp,
-            start = 8.dp,
-            end = 8.dp
-        )
-        Text(
-            modifier = Modifier.padding(textPadding),
-            text = stringResource(R.string.loading_error),
-            style = MaterialTheme.typography.titleLarge,
-            color = defaultColor
-        )
-        Text(
-            modifier = Modifier.padding(textPadding),
-            text = stringResource(R.string.wait_and_try_again),
-            style = MaterialTheme.typography.titleSmall,
-            color = defaultColor
-        )
-        ElevatedButton(
-            onClick = onTryAgainPressed,
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            Text(stringResource(R.string.try_again))
-        }
-    }
-}
-
-@Preview(showBackground = true, heightDp = 400)
-@Composable
-private fun ErrorContentPreview() {
-    AppContatosTheme {
-        ErrorContent(
-            onTryAgainPressed = {}
-        )
     }
 }
 
