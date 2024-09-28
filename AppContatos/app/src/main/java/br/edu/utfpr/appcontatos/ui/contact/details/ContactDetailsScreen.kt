@@ -58,6 +58,7 @@ import br.edu.utfpr.appcontatos.ui.utils.composables.ContactAvatar
 import br.edu.utfpr.appcontatos.ui.utils.composables.DefaultErrorContent
 import br.edu.utfpr.appcontatos.ui.utils.composables.DefaultLoadingContent
 import br.edu.utfpr.appcontatos.ui.utils.composables.FavoriteIconButton
+import br.edu.utfpr.appcontatos.utils.toFormattedPhone
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -362,7 +363,7 @@ private fun ContactDetails(
             )
             ContactInfo(
                 imageVector = Icons.Outlined.Phone,
-                value = contact.phoneNumber.ifBlank {
+                value = contact.phoneNumber.toFormattedPhone().ifBlank {
                     "Adicionar número de telefone"
                 },
                 enabled = contact.phoneNumber.isBlank() && !isDeleting,

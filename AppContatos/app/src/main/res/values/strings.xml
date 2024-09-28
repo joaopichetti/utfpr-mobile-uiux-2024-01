@@ -36,4 +36,6 @@
     <string name="nome_obrigatorio">Informe o nome</string>
     <string name="telefone_invalido">Telefone inválido</string>
     <string name="email_invalido">E-mail inválido</string>
+    <string name="patrimonio">Patrimônio</string>
+    <string name="patrimonio_invalido">Valor do patrimônio inválido</string>
 </resources>

@@ -60,6 +60,7 @@ import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
 import br.edu.utfpr.appcontatos.ui.utils.composables.ContactAvatar
 import br.edu.utfpr.appcontatos.ui.utils.composables.DefaultErrorContent
 import br.edu.utfpr.appcontatos.ui.utils.composables.DefaultLoadingContent
+import br.edu.utfpr.appcontatos.ui.utils.visualtransformation.PhoneVisualTransformation
 import br.edu.utfpr.appcontatos.utils.format
 import java.time.Instant
 import java.time.LocalDate
@@ -516,7 +517,8 @@ private fun FormContent(
                 errorMessageCode = phone.errorMessageCode,
                 onValueChanged = onPhoneChanged,
                 keyboardType = KeyboardType.Phone,
-                enabled = !isSaving
+                enabled = !isSaving,
+                visualTransformation = PhoneVisualTransformation()
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
