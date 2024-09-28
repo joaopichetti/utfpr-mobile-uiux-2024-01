@@ -17,7 +17,7 @@ private object Screens {
     const val CONTACT_DETAILS = "contactDetails"
 }
 
-private object Arguments {
+object Arguments {
     const val CONTACT_ID = "contactId"
 }
 
