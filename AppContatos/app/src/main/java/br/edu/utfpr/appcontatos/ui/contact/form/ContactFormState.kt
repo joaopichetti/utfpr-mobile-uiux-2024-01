@@ -29,6 +29,13 @@ data class ContactFormState(
     val type: FormField<ContactTypeEnum> = FormField(value = ContactTypeEnum.PERSONAL)
 ) {
     val isNewContact get(): Boolean = contactId <= 0
+    val isValidForm get(): Boolean = firstName.isValid &&
+            lastName.isValid &&
+            phone.isValid &&
+            email.isValid &&
+            isFavorite.isValid &&
+            birthDate.isValid &&
+            type.isValid
 }
 
 

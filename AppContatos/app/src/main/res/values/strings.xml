@@ -26,4 +26,14 @@
     <string name="salvar">Salvar</string>
     <string name="selecione_a_data">Selecione a data</string>
     <string name="ok">OK</string>
+    <string name="nome">Nome</string>
+    <string name="sobrenome">Sobrenome</string>
+    <string name="telefone">Telefone</string>
+    <string name="birth_date">Aniversário</string>
+    <string name="favorito">Favorito</string>
+    <string name="personal">Pessoal</string>
+    <string name="professional">Profissional</string>
+    <string name="nome_obrigatorio">Informe o nome</string>
+    <string name="telefone_invalido">Telefone inválido</string>
+    <string name="email_invalido">E-mail inválido</string>
 </resources>
