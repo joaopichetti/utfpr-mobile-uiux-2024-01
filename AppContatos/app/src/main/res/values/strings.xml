@@ -20,4 +20,10 @@
     <string name="confirmar">Confirmar</string>
     <string name="cancelar">Cancelar</string>
     <string name="confirmar_remover_contato">Esse contato será removido permanemtente.</string>
+    <string name="error_saving">Ocorreu um erro ao salvar. Aguarde um momento e tente novamente</string>
+    <string name="novo_contato">Novo contato</string>
+    <string name="editar_contato">Editar contato</string>
+    <string name="salvar">Salvar</string>
+    <string name="selecione_a_data">Selecione a data</string>
+    <string name="ok">OK</string>
 </resources>
