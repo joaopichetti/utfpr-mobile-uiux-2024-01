@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
@@ -118,13 +119,15 @@ fun ContactFormScreen(
                 isFavorite = viewModel.uiState.isFavorite,
                 birthDate = viewModel.uiState.birthDate,
                 type = viewModel.uiState.type,
+                patrimonio = viewModel.uiState.patrimonio,
                 onFirstNameChanged = viewModel::onFirstNameChanged,
                 onLastNameChanged = viewModel::onLastNameChanged,
                 onPhoneChanged = viewModel::onPhoneChanged,
                 onEmailChanged = viewModel::onEmailChanged,
                 onTypeChanged = viewModel::onTypeChanged,
                 onIsFavoriteChanged = viewModel::onIsFavoriteChanged,
-                onBirthDateChanged = viewModel::onBirthDateChanged
+                onBirthDateChanged = viewModel::onBirthDateChanged,
+                onPatrimonioChanged = viewModel::onPatrimonioChanged
             )
         }
     }
@@ -441,13 +444,15 @@ private fun FormContent(
     isFavorite: FormField<Boolean>,
     birthDate: FormField<LocalDate>,
     type: FormField<ContactTypeEnum>,
+    patrimonio: FormField<String>,
     onFirstNameChanged: (String) -> Unit,
     onLastNameChanged: (String) -> Unit,
     onPhoneChanged: (String) -> Unit,
     onEmailChanged: (String) -> Unit,
     onIsFavoriteChanged: (Boolean) -> Unit,
     onBirthDateChanged: (LocalDate) -> Unit,
-    onTypeChanged: (ContactTypeEnum) -> Unit
+    onTypeChanged: (ContactTypeEnum) -> Unit,
+    onPatrimonioChanged: (String) -> Unit
 ) {
     Column(
         modifier = modifier
@@ -532,6 +537,22 @@ private fun FormContent(
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
+                imageVector = Icons.Filled.AttachMoney,
+                contentDescription = stringResource(R.string.patrimonio),
+                tint = MaterialTheme.colorScheme.outline
+            )
+            FormTextField(
+                modifier = formTextFieldModifier,
+                label = stringResource(R.string.patrimonio),
+                value = patrimonio.value,
+                errorMessageCode = patrimonio.errorMessageCode,
+                onValueChanged = onPatrimonioChanged,
+                keyboardType = KeyboardType.Number,
+                enabled = !isSaving
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
                 imageVector = Icons.Filled.CalendarMonth,
                 contentDescription = stringResource(R.string.birth_date),
                 tint = MaterialTheme.colorScheme.background
@@ -607,13 +628,15 @@ private fun FormContentPreview() {
             isFavorite = FormField(value = false),
             birthDate = FormField(value = LocalDate.now()),
             type = FormField(value = ContactTypeEnum.PERSONAL),
+            patrimonio = FormField(value = ""),
             onFirstNameChanged = {},
             onLastNameChanged = {},
             onPhoneChanged = {},
             onEmailChanged = {},
             onTypeChanged = {},
             onIsFavoriteChanged = {},
-            onBirthDateChanged = {}
+            onBirthDateChanged = {},
+            onPatrimonioChanged = {}
         )
     }
 }

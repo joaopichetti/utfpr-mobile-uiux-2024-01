@@ -12,6 +12,7 @@ import br.edu.utfpr.appcontatos.data.ContactTypeEnum
 import br.edu.utfpr.appcontatos.ui.Arguments
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.random.Random
 
@@ -68,6 +69,9 @@ class ContactFormViewModel(
                     ),
                     type = uiState.type.copy(
                         value = contact.type
+                    ),
+                    patrimonio = uiState.patrimonio.copy(
+                        value = contact.patrimonio.toString()
                     )
                 )
             }
@@ -165,6 +169,28 @@ class ContactFormViewModel(
         }
     }
 
+    fun onPatrimonioChanged(newPatrimonio: String) {
+        if (uiState.patrimonio.value != newPatrimonio) {
+            uiState = uiState.copy(
+                patrimonio = uiState.patrimonio.copy(
+                    value = newPatrimonio,
+                    errorMessageCode = validatePatrimonio(newPatrimonio)
+                )
+            )
+        }
+    }
+
+    private fun validatePatrimonio(patrimonio: String): Int {
+        if (patrimonio.isBlank()) return 0
+
+        return try {
+            BigDecimal(patrimonio)
+            0
+        } catch (_: NumberFormatException) {
+            R.string.patrimonio_invalido
+        }
+    }
+
     private fun isValidForm(): Boolean {
         uiState = uiState.copy(
             firstName = uiState.firstName.copy(
@@ -175,6 +201,9 @@ class ContactFormViewModel(
             ),
             email = uiState.email.copy(
                 errorMessageCode = validateEmail(uiState.email.value)
+            ),
+            patrimonio = uiState.patrimonio.copy(
+                errorMessageCode = validatePatrimonio(uiState.patrimonio.value)
             )
         )
         return uiState.isValidForm
@@ -197,7 +226,12 @@ class ContactFormViewModel(
                         email = uiState.email.value,
                         isFavorite = uiState.isFavorite.value,
                         type = uiState.type.value,
-                        birthDate = uiState.birthDate.value
+                        birthDate = uiState.birthDate.value,
+                        patrimonio = if (uiState.patrimonio.value.isBlank()) {
+                            BigDecimal.ZERO
+                        } else {
+                            BigDecimal(uiState.patrimonio.value)
+                        }
                     )
                     ContactDatasource.instance.save(contactToSave)
                     uiState.copy(

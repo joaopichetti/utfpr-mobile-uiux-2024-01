@@ -26,7 +26,8 @@ data class ContactFormState(
     val email: FormField<String> = FormField(value = ""),
     val isFavorite: FormField<Boolean> = FormField(value = false),
     val birthDate: FormField<LocalDate> = FormField(value = LocalDate.now()),
-    val type: FormField<ContactTypeEnum> = FormField(value = ContactTypeEnum.PERSONAL)
+    val type: FormField<ContactTypeEnum> = FormField(value = ContactTypeEnum.PERSONAL),
+    val patrimonio: FormField<String> = FormField(value = "")
 ) {
     val isNewContact get(): Boolean = contactId <= 0
     val isValidForm get(): Boolean = firstName.isValid &&
@@ -35,7 +36,8 @@ data class ContactFormState(
             email.isValid &&
             isFavorite.isValid &&
             birthDate.isValid &&
-            type.isValid
+            type.isValid &&
+            patrimonio.isValid
 }
 
 
