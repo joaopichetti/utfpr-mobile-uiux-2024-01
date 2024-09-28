@@ -62,7 +62,7 @@ import br.edu.utfpr.appcontatos.ui.utils.composables.DefaultLoadingContent
 import br.edu.utfpr.appcontatos.utils.format
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
+import java.time.ZoneOffset
 
 @Composable
 fun ContactFormScreen(
@@ -369,7 +369,12 @@ fun FormDatePicker(
     enabled: Boolean = true
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState()
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = value
+            .atStartOfDay(ZoneOffset.UTC)
+            .toInstant()
+            .toEpochMilli()
+    )
 
     FormTextField(
         modifier = modifier,
@@ -397,10 +402,11 @@ fun FormDatePicker(
                     datePickerState.selectedDateMillis?.let {
                         val date = Instant
                             .ofEpochMilli(it)
-                            .atZone(ZoneId.systemDefault())
+                            .atZone(ZoneOffset.UTC)
                             .toLocalDate()
                         onValueChanged(date)
                     }
+                    showDatePicker = !showDatePicker
                 }) {
                     Text(stringResource(R.string.ok))
                 }
